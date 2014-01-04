@@ -2,9 +2,9 @@
 # vi: set ft=ruby :
 
 # Config Github Settings
-github_username = "fideloper"
+github_username = "Ilyes512"
 github_repo     = "Vaprobash"
-github_branch   = "1.4.2"
+github_branch   = "mysetup"
 github_url      = "https://raw.githubusercontent.com/#{github_username}/#{github_repo}/#{github_branch}"
 
 # Because this:https://developer.github.com/changes/2014-12-08-removing-authorizations-token/
@@ -21,7 +21,7 @@ hostname        = "vaprobash.dev"
 #   10.0.0.1    - 10.255.255.254
 #   172.16.0.1  - 172.31.255.254
 #   192.168.0.1 - 192.168.255.254
-server_ip             = "192.168.22.10"
+server_ip             = "192.168.22.11"
 server_cpus           = "1"   # Cores
 server_memory         = "384" # MB
 server_swap           = "768" # Options: false | int (MB) - Guideline: Between one or two times the server_memory
@@ -31,7 +31,7 @@ server_swap           = "768" # Options: false | int (MB) - Guideline: Between o
 # CET        for Central European Time
 # US/Central for American Central
 # US/Eastern for American Eastern
-server_timezone  = "UTC"
+server_timezone       = "Europe/Amsterdam"
 
 # Database Configuration
 mysql_root_password   = "root"   # We'll assume user "root"
