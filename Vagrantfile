@@ -120,11 +120,19 @@ Vagrant.configure("2") do |config|
   # Enable agent forwarding over SSH connections
   config.ssh.forward_agent = true
 
-  # Use NFS for the shared folder
-  config.vm.synced_folder ".", "/vagrant",
-    id: "core",
-    :nfs => true,
-    :mount_options => ['nolock,vers=3,udp,noatime,actimeo=2,fsc']
+  # Setup the synced folder
+  if Vagrant::Util::Platform.windows?
+    config.vm.synced_folder ".", "/vagrant",
+              id: "core",
+              :nfs => true,
+              :mount_options => ["dmode=777","fmode=777"]
+  else
+    # Use NFS for the shared folder
+    config.vm.synced_folder ".", "/vagrant",
+              id: "core",
+              :nfs => true,
+              :mount_options => ['nolock,vers=3,udp,noatime,actimeo=2,fsc']
+  end
 
   # Replicate local .gitconfig file if it exists
   if File.file?(File.expand_path("~/.gitconfig"))
@@ -169,10 +177,17 @@ Vagrant.configure("2") do |config|
     # Usage docs: http://fgrehm.viewdocs.io/vagrant-cachier/usage
     config.cache.scope = :box
 
-    config.cache.synced_folder_opts = {
-        type: :nfs,
-        mount_options: ['rw', 'vers=3', 'tcp', 'nolock']
-    }
+    if Vagrant::Util::Platform.windows?
+      config.cache.synced_folder_opts = {
+          type: :nfs,
+          mount_options: ['rw', 'vers=3', 'tcp', 'nolock']
+      }
+    else
+      config.cache.synced_folder_opts = {
+          type: :nfs,
+          :mount_options => ["dmode=777","fmode=777"]
+      }
+    end
   end
 
   # Adding vagrant-digitalocean provider - https://github.com/smdahlen/vagrant-digitalocean
