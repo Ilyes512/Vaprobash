@@ -58,10 +58,11 @@ hhvm                  = "false"
 
 # PHP Options
 composer_packages     = [        # List any global Composer packages that you want to install
-  #"phpunit/phpunit:4.0.*",
-  #"codeception/codeception=*",
-  #"phpspec/phpspec:2.0.*@dev",
-  #"squizlabs/php_codesniffer:1.5.*",
+  #"phpunit/phpunit:~4.4",
+  #"codeception/codeception=~2.0.9",
+  #"phpspec/phpspec:~2.1",
+  #"squizlabs/php_codesniffer:~2.1",
+  #"pragmarx/laravelcs:*",
 ]
 
 # Default web server document root
@@ -77,6 +78,7 @@ nodejs_version        = "latest"   # By default "latest" will equal the latest s
 nodejs_packages       = [          # List any global NodeJS packages that you want to install
   #"grunt-cli",
   #"gulp",
+  #"npm-check-updates",
   #"bower",
   #"yo",
 ]
