@@ -23,8 +23,8 @@ hostname        = "vaprobash.dev"
 #   192.168.0.1 - 192.168.255.254
 server_ip             = "192.168.22.11"
 server_cpus           = "1"   # Cores
-server_memory         = "384" # MB
-server_swap           = "768" # Options: false | int (MB) - Guideline: Between one or two times the server_memory
+server_memory         = "512" # MB
+server_swap           = "512" # Options: false | int (MB) - Guideline: Between one or two times the server_memory
 
 # UTC        for Universal Coordinated Time
 # EST        for Eastern Standard Time
@@ -35,14 +35,14 @@ server_timezone       = "Europe/Amsterdam"
 
 # Database Configuration
 mysql_root_password   = "root"   # We'll assume user "root"
-mysql_version         = "5.5"    # Options: 5.5 | 5.6
-mysql_enable_remote   = "false"  # remote access enabled when true
+mysql_version         = "5.6"    # Options: 5.5 | 5.6
+mysql_enable_remote   = "true"   # remote access enabled when true
 pgsql_root_password   = "root"   # We'll assume user "root"
 mongo_version         = "2.6"    # Options: 2.6 | 3.0
 mongo_enable_remote   = "false"  # remote access enabled when true
 
 # Languages and Packages
-php_timezone          = "UTC"    # http://php.net/manual/en/timezones.php
+php_timezone          = "Europe/Amsterdam"    # http://php.net/manual/en/timezones.php
 php_version           = "5.6"    # Options: 5.5 | 5.6
 ruby_version          = "latest" # Choose what ruby version should be installed (will also be the default version)
 ruby_gems             = [        # List any Ruby Gems that you want to install
