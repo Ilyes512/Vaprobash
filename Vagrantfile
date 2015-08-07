@@ -360,9 +360,6 @@ Vagrant.configure("2") do |config|
   # Install Mailcatcher
   # config.vm.provision "shell", path: "#{github_url}/scripts/mailcatcher.sh"
 
-  # Install git-ftp
-  # config.vm.provision "shell", path: "#{github_url}/scripts/git-ftp.sh", privileged: false
-
   # Install PHPloy
   # config.vm.provision "shell", path: "#{github_url}/scripts/phploy.sh", privileged: false
 
