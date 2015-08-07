@@ -1,0 +1,7 @@
+- [ ] Install trough phploy trough composer for easy updating (waiting on [banago/PHPloy#143](https://github.com/banago/PHPloy/issues/143))
+- [x] Remove 	git-ftp (use PHPloy instead).
+- [ ] Set /www/vagrant as default instead of /vagrant.
+- [ ] Make it easier to run multiple projects with one instance of VaproBash.
+- [ ] Check out the variable "github_pat" in the Vagrantfile. It's not used anyware (yet).
+- [x] Make xdebug optional
+- [ ] 
