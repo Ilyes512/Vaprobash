@@ -29,6 +29,6 @@ fi
 
 echo ">>> Installing git-ftp";
 
-curl --silent -L https://raw.githubusercontent.com/banago/PHPloy/master/phploy > phploy
+curl -sS -L https://raw.githubusercontent.com/banago/PHPloy/master/phploy > phploy
 sudo chmod guo+x phploy
 sudo mv phploy /usr/local/bin
