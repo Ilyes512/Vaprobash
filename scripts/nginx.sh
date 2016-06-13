@@ -34,6 +34,12 @@ else
     github_url="$4"
 fi
 
+if [[ $5 == "7.0" ]]; then
+    PHP7=1
+else
+    PHP7=0
+fi
+
 # Add repo for latest stable nginx
 sudo add-apt-repository -y ppa:nginx/stable
 
@@ -62,17 +68,33 @@ curl --silent -L $github_url/helpers/ngxcb.sh > ngxcb
 sudo chmod guo+x ngxen ngxdis ngxcb
 sudo mv ngxen ngxdis ngxcb /usr/local/bin
 
-# Create Nginx Server Block named "vagrant" and enable it
-sudo ngxcb -d $public_folder -s "$1.xip.io$hostname" -e
+if [[ $PHP7 -eq 1 ]]; then
+    echo ">>  ngxcb for PHP7"
+
+    # Create Nginx Server Block named "vagrant" and enable it
+    sudo ngxcb -d $public_folder -s "$1.xip.io$hostname" -e -p
+else
+    echo ">>  ngxcb for PHP5"
+
+    # Create Nginx Server Block named "vagrant" and enable it
+    sudo ngxcb -d $public_folder -s "$1.xip.io$hostname" -e
+fi
 
 # Disable "default"
 sudo ngxdis default
 
 if [[ $HHVM_IS_INSTALLED -ne 0 && $PHP_IS_INSTALLED -eq 0 ]]; then
-    # PHP-FPM Config for Nginx
-    sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
+    if [[ $PHP7 -eq 1 ]]; then
+        # PHP-FPM Config for Nginx
+        sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/7.0/fpm/php.ini
 
-    sudo service php5-fpm restart
+        sudo service php7.0-fpm restart
+    else
+        # PHP-FPM Config for Nginx
+        sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
+
+        sudo service php5-fpm restart
+    fi
 fi
 
 sudo service nginx restart

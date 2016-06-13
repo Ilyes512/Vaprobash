@@ -14,6 +14,7 @@ Assumes /etc/nginx/sites-available and /etc/nginx/sites-enabled setup used.
     -h    Help - Show this menu.
     -n    The Server Block file name - default: vagrant - i.e. -n yoursite
     -s    ServerName - i.e. -s yoursite.com
+    -p    Install serverblock for PHP 7.0
 
 EOF
 exit 1
@@ -27,14 +28,20 @@ fi
 # Output Nginx Server Block Config
 function create_server_block {
 
+    # PHP7
+    PHP7=${1:--1}
+    [[ $PHP7 -ne -1 ]] && { PHP7=0; }
+
     # Test if PHP is installed
     php -v > /dev/null 2>&1
     PHP_IS_INSTALLED=$?
+    [[ $PHP7 -eq 0 ]] && { PHP_IS_INSTALLED=-1; }
 
     # Test if HHVM is installed
     hhvm --version > /dev/null 2>&1
     HHVM_IS_INSTALLED=$?
-    [[ $HHVM_IS_INSTALLED -eq 0 ]] && { PHP_IS_INSTALLED=-1; }
+
+    [[ $HHVM_IS_INSTALLED -eq 0 ]] && { PHP_IS_INSTALLED=-1; PHP7=-1; }
 
     # Default empty PHP Config
     PHP_NO_SSL=""
@@ -44,38 +51,73 @@ function create_server_block {
 
 # Nginx Server Block config for PHP (without using SSL)
 read -d '' PHP_NO_SSL <<EOF
-        # pass the PHP scripts to php5-fpm
-        # Note: \.php$ is susceptible to file upload attacks
-        # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
-        location ~ \.php$ {
-            try_files \$uri =404;
-            fastcgi_split_path_info ^(.+\.php)(/.+)$;
-            # With php5-fpm:
-            fastcgi_pass 127.0.0.1:9000;
-            fastcgi_index index.php;
-            include fastcgi_params;
-            fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-            fastcgi_param LARA_ENV local; # Environment variable for Laravel
-            fastcgi_param HTTPS off;
-        }
+    # pass the PHP scripts to php5-fpm
+    # Note: \.php$ is susceptible to file upload attacks
+    # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
+    location ~ \.php$ {
+        try_files \$uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param LARA_ENV local; # Environment variable for Laravel
+        fastcgi_param HTTPS off;
+    }
 EOF
 
 # Nginx Server Block config for PHP (with SSL)
 read -d '' PHP_WITH_SSL <<EOF
-        # pass the PHP scripts to php5-fpm
-        # Note: \.php$ is susceptible to file upload attacks
-        # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
-        location ~ \.php$ {
-            try_files \$uri =404;
-            fastcgi_split_path_info ^(.+\.php)(/.+)$;
-            # With php5-fpm:
-            fastcgi_pass 127.0.0.1:9000;
-            fastcgi_index index.php;
-            include fastcgi_params;
-            fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-            fastcgi_param LARA_ENV local; # Environment variable for Laravel
-            fastcgi_param HTTPS on;
-        }
+    # pass the PHP scripts to php5-fpm
+    # Note: \.php$ is susceptible to file upload attacks
+    # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
+    location ~ \.php$ {
+        try_files \$uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param LARA_ENV local; # Environment variable for Laravel
+        fastcgi_param HTTPS on;
+    }
+EOF
+    fi
+
+    if [[ $PHP7 -eq 0 ]]; then
+
+# Nginx Server Block config for PHP (without using SSL)
+read -d '' PHP_NO_SSL <<EOF
+    # pass the PHP scripts to php5-fpm
+    # Note: \.php$ is susceptible to file upload attacks
+    # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
+    location ~ \.php$ {
+        try_files \$uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param LARA_ENV local; # Environment variable for Laravel
+        fastcgi_param HTTPS off;
+    }
+EOF
+
+# Nginx Server Block config for PHP (with SSL)
+read -d '' PHP_WITH_SSL <<EOF
+    # pass the PHP scripts to php5-fpm
+    # Note: \.php$ is susceptible to file upload attacks
+    # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
+    location ~ \.php$ {
+        try_files \$uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param LARA_ENV local; # Environment variable for Laravel
+        fastcgi_param HTTPS on;
+    }
 EOF
     fi
 
@@ -83,106 +125,106 @@ EOF
 
 # Nginx Server Block config for HHVM (without using SSL)
 read -d '' PHP_NO_SSL <<EOF
-        # pass the PHP scripts to php5-fpm
-        location ~ \.(hh|php)$ {
-            try_files \$uri =404;
-            fastcgi_keep_conn on;
-            fastcgi_split_path_info ^(.+\.php)(/.+)$;
-            # With HHVM:
-            fastcgi_pass 127.0.0.1:9000;
-            fastcgi_index index.php;
-            include fastcgi_params;
-            fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-            fastcgi_param LARA_ENV local; # Environment variable for Laravel
-            fastcgi_param HTTPS off;
-        }
+    # pass the PHP scripts to php5-fpm
+    location ~ \.(hh|php)$ {
+        try_files \$uri =404;
+        fastcgi_keep_conn on;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        # With HHVM:
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param LARA_ENV local; # Environment variable for Laravel
+        fastcgi_param HTTPS off;
+    }
 EOF
 
 # Nginx Server Block config for HHVM (with SSL)
 read -d '' PHP_WITH_SSL <<EOF
-        # pass the PHP scripts to php5-fpm
-        location ~ \.(hh|php)$ {
-            try_files \$uri =404;
-            fastcgi_keep_conn on;
-            fastcgi_split_path_info ^(.+\.php)(/.+)$;
-            # With HHVM:
-            fastcgi_pass 127.0.0.1:9000;
-            fastcgi_index index.php;
-            include fastcgi_params;
-            fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-            fastcgi_param LARA_ENV local; # Environment variable for Laravel
-            fastcgi_param HTTPS on;
-        }
+    # pass the PHP scripts to php5-fpm
+    location ~ \.(hh|php)$ {
+        try_files \$uri =404;
+        fastcgi_keep_conn on;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        # With HHVM:
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param LARA_ENV local; # Environment variable for Laravel
+        fastcgi_param HTTPS on;
+    }
 EOF
     fi
 
 # Main Nginx Server Block Config
 cat <<EOF
-    server {
-        listen 80;
+server {
+    listen 80;
 
-        root $DocumentRoot;
-        index index.html index.htm index.php app.php app_dev.php;
+    root $DocumentRoot;
+    index index.html index.htm index.php app.php app_dev.php;
 
-        # Make site accessible from ...
-        server_name $ServerName;
+    # Make site accessible from ...
+    server_name $ServerName;
 
-        access_log /var/log/nginx/vagrant.com-access.log;
-        error_log  /var/log/nginx/vagrant.com-error.log error;
+    access_log /var/log/nginx/vagrant.com-access.log;
+    error_log  /var/log/nginx/vagrant.com-error.log error;
 
-        charset utf-8;
+    charset utf-8;
 
-        location / {
-            try_files \$uri \$uri/ /app.php?\$query_string /index.php?\$query_string;
-        }
-
-        location = /favicon.ico { log_not_found off; access_log off; }
-        location = /robots.txt  { access_log off; log_not_found off; }
-
-        error_page 404 /index.php;
-
-        $PHP_NO_SSL
-
-        # Deny .htaccess file access
-        location ~ /\.ht {
-            deny all;
-        }
+    location / {
+        try_files \$uri \$uri/ /app.php?\$query_string /index.php?\$query_string;
     }
 
-    server {
-        listen 443;
+    location = /favicon.ico { log_not_found off; access_log off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
 
-        ssl on;
-        ssl_certificate     /etc/ssl/xip.io/xip.io.crt;
-        ssl_certificate_key /etc/ssl/xip.io/xip.io.key;
+    error_page 404 /index.php;
 
-        root $DocumentRoot;
-        index index.html index.htm index.php app.php app_dev.php;
+    $PHP_NO_SSL
 
-        # Make site accessible from ...
-        server_name $ServerName;
-
-        access_log /var/log/nginx/vagrant.com-access.log;
-        error_log  /var/log/nginx/vagrant.com-error.log error;
-
-        charset utf-8;
-
-        location / {
-            try_files \$uri \$uri/ /app.php?\$query_string /index.php?\$query_string;
-        }
-
-        location = /favicon.ico { log_not_found off; access_log off; }
-        location = /robots.txt  { access_log off; log_not_found off; }
-
-        error_page 404 /index.php;
-
-        $PHP_WITH_SSL
-
-        # Deny .htaccess file access
-        location ~ /\.ht {
-            deny all;
-        }
+    # Deny .htaccess file access
+    location ~ /\.ht {
+        deny all;
     }
+}
+
+server {
+    listen 443;
+
+    ssl on;
+    ssl_certificate     /etc/ssl/xip.io/xip.io.crt;
+    ssl_certificate_key /etc/ssl/xip.io/xip.io.key;
+
+    root $DocumentRoot;
+    index index.html index.htm index.php app.php app_dev.php;
+
+    # Make site accessible from ...
+    server_name $ServerName;
+
+    access_log /var/log/nginx/vagrant.com-access.log;
+    error_log  /var/log/nginx/vagrant.com-error.log error;
+
+    charset utf-8;
+
+    location / {
+        try_files \$uri \$uri/ /app.php?\$query_string /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { log_not_found off; access_log off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    $PHP_WITH_SSL
+
+    # Deny .htaccess file access
+    location ~ /\.ht {
+        deny all;
+    }
+}
 EOF
 }
 
@@ -202,7 +244,7 @@ ForceOverwrite=0
 # - Run it in "silence"-mode by starting with a ":"
 # - Single ":" after an argument means "required"
 # - Double ":" after an argument means "optional"
-while getopts ":hd:s:n::ef" OPTION; do
+while getopts ":hd:s:n::efp" OPTION; do
     case $OPTION in
         h)
             show_usage
@@ -222,6 +264,9 @@ while getopts ":hd:s:n::ef" OPTION; do
         f)
             ForceOverwrite=1
             ;;
+        p)
+            PHP7=1
+            ;;
         *)
             show_usage
             ;;
@@ -236,7 +281,7 @@ if [[ $ForceOverwrite -eq 1 ]]; then
     # remove symlink from sites-enabled directory
     rm -f "/etc/nginx/sites-enabled/${ServerBlockName}" &>/dev/null
     if [[ $? -eq 0 ]]; then
-        # if file has been removed, provide user with information that existing server 
+        # if file has been removed, provide user with information that existing server
         # block is being overwritten
         echo ">>> ${ServerBlockName} is enabled and will be overwritten"
         echo ">>> to enable this server block execute 'ngxen ${ServerBlockName}' or use the -e flag"
@@ -248,7 +293,7 @@ elif [[ -f "/etc/nginx/sites-available/${ServerBlockName}" ]]; then
 fi
 
 # Create the Server Block config
-create_server_block > /etc/nginx/sites-available/${ServerBlockName}
+create_server_block $PHP7 > /etc/nginx/sites-available/${ServerBlockName}
 
 # Enable the Server Block and reload Nginx
 if [[ $EnableServerBlock -eq 1 ]]; then
